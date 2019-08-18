@@ -201,8 +201,12 @@ export default {
     },
     totalTime () {
       return this.filteredEvents.reduce((acc, event) => {
-        const eventDuration = calcEventTime(event)
-        acc += eventDuration
+        let eventTime = calcEventTime(event)
+        if (event.occurance !== 'always') {
+          eventTime = eventTime / 2
+        }
+        acc += eventTime
+
         return acc
       }, 0)
     },
