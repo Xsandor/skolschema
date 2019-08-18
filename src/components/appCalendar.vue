@@ -42,6 +42,11 @@ import interactionPlugin from '@fullcalendar/interaction'
 
 import { formattedTime } from '../utilities'
 
+const occuranceValues = {
+  oddWeek: 'O',
+  evenWeek: 'J'
+}
+
 export default {
   name: 'app-calendar',
   props: {
@@ -154,12 +159,19 @@ export default {
       el.insertAdjacentHTML('beforeend', `<div class="time-start">${formattedTime(event.start)}</div>`)
       el.insertAdjacentHTML('beforeend', `<div class="time-end">${formattedTime(event.end)}</div>`)
       el.querySelector('.fc-content').insertAdjacentHTML('beforeend', `<div class="teachers">${event.extendedProps.teachers ? event.extendedProps.teachers.join(', ') : ''}</div>`)
+      if (event.extendedProps.occurance !== 'always') {
+        el.querySelector('.fc-content').insertAdjacentHTML('beforeend', `<div class="occurance">${occuranceValues[event.extendedProps.occurance]}</div>`)
+      }
     }
   }
 }
 </script>
 
 <style lang='scss'>
+  @import '~@fullcalendar/core/main.css';
+  @import '~@fullcalendar/daygrid/main.css';
+  @import '~@fullcalendar/timegrid/main.css';
+
   .fc-view-container {
     background: #fff;
   }
@@ -182,21 +194,27 @@ export default {
 
       .fc-title {
         text-align: center;
-        font-size: 1.4em;
+        font-size: 1.3em;
       }
 
       .teachers {
         font-size: 0.8em;
       }
+
+      .occurance {
+        position: absolute;
+        top: -2px;
+        right: 2px;
+      }
   }
 
-  .fc-short .teachers {
+  .fc-short .teachers, .fc-short .occurance {
     display: none;
   }
 
   .time-start, .time-end {
     position: absolute;
-    font-size: 0.9em;
+    font-size: 0.8em;
     border-radius: 2px 0 2px 0;
     padding: 0px 3px;
     background: rgba(255,255,255,0.9);

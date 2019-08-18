@@ -77,8 +77,18 @@
       right
       class="sidebar-container"
     >
-      <div v-for="subject in subjects" :key="subject.name" class='fc-event' :style="subjectStyle(subject)"><span class="subject-name">{{ subject.name }}</span><span class="subject-remaining">{{ remainingSubjectTime[subject.name] }} min</span></div>
-      <p>Utlagd tid: {{ totalTime }} minuter</p>
+      <div v-for="subject in subjects" :key="subject.name" @click="selectSubject(subject)" class='fc-event' :style="subjectStyle(subject)"><span class="subject-name">{{ subject.name }}</span><span class="subject-remaining">{{ remainingSubjectTime[subject.name] }} min</span></div>
+      <div class="text-center">
+        <v-btn fab small color="red" @click="insertNewSubject"><v-icon color="white">mdi-plus</v-icon></v-btn>
+      </div>
+      <br/>
+      <v-divider></v-divider>
+      <v-list-item two-line style="padding-left: 0;">
+        <v-list-item-content>
+          <v-list-item-title>Utlagd tid</v-list-item-title>
+          <v-list-item-subtitle>{{ totalTime }} minuter</v-list-item-subtitle>
+        </v-list-item-content>
+      </v-list-item>
     </v-navigation-drawer>
 
     <app-event-modal
@@ -87,8 +97,15 @@
       :teachers="teachers"
       :classes="classes"
       :subjects="subjects"
-      @close="showEventModal = false"
+      @close="closeEventModal"
       @deleteEvent="deleteEvent"
+    />
+    <app-subject-modal
+      :show="showSubjectModal"
+      :subject="selectedSubject"
+      @close="closeSubjectModal"
+      @deleteSubject="deleteSubject"
+      @subjectColorChanged="handleSubjectColorChanged"
     />
     <v-snackbar
       v-model="showDeleteConfirmation"
@@ -109,7 +126,8 @@
 
 <script>
 import appCalendar from './components/appCalendar'
-import appEventModal from './components/appEventModal'
+import appEventModal from './components/eventModal'
+import appSubjectModal from './components/subjectModal'
 import { Draggable } from '@fullcalendar/interaction'
 
 import { calcEventTime } from './utilities'
@@ -143,26 +161,29 @@ export default {
   name: 'app',
   components: {
     appCalendar,
-    appEventModal
+    appEventModal,
+    appSubjectModal
   },
   data () {
     return {
       events: [],
       subjects: [
-        { name: 'Matte', color: 'purple', target: 180 },
-        { name: 'Svenska', color: 'red', target: 240 },
-        { name: 'Engelska', color: 'green', target: 360 },
-        { name: 'NO', color: 'blue', target: 360 },
-        { name: 'SO', color: 'orange', target: 360 },
-        { name: 'Idrott', color: 'brown', target: 100 },
-        { name: 'Lunch', color: 'grey', target: 0 }
+        { name: 'Matte', color: '#795548', target: 180 },
+        { name: 'Svenska', color: '#F44336', target: 240 },
+        { name: 'Engelska', color: '#FF9800', target: 360 },
+        { name: 'NO', color: '#FFC107', target: 360 },
+        { name: 'SO', color: '#4CAF50', target: 360 },
+        { name: 'Idrott', color: '#2196F3', target: 100 },
+        { name: 'Lunch', color: '#9E9E9E', target: 0 }
       ],
       classes: ['1A', '1B', '1C', '1D'],
       teachers: ['JW', 'AS', 'PD', 'LA', 'CR'],
       sidebarOpen: true,
+      showSubjectModal: false,
       showEventModal: false,
       showDeleteConfirmation: false,
       lastDeletedEventId: '',
+      selectedSubject: {},
       selectedEvent: {},
       selectedClass: '1A',
       selectedTeacher: 'Alla'
@@ -191,7 +212,12 @@ export default {
       this.subjects.forEach((subject) => {
         const events = this.filteredEvents.filter(event => event.title === subject.name)
         subjectTime[subject.name] = 0 - subject.target + events.reduce((acc, event) => {
-          acc += calcEventTime(event)
+          let eventTime = calcEventTime(event)
+          if (event.occurance !== 'always') {
+            eventTime = eventTime / 2
+          }
+
+          acc += eventTime
           return acc
         }, 0)
       })
@@ -200,6 +226,39 @@ export default {
     }
   },
   methods: {
+    closeEventModal () {
+      this.saveConfigToLocalStorage()
+      this.showEventModal = false
+    },
+    closeSubjectModal () {
+      this.saveConfigToLocalStorage()
+      this.showSubjectModal = false
+    },
+    handleSubjectColorChanged (subject) {
+      const events = this.events.filter(event => event.title === subject.name)
+      events.forEach((event) => {
+        event.color = subject.color
+      })
+      this.saveConfigToLocalStorage()
+    },
+    insertNewSubject () {
+      const newSubject = { name: 'Ny', color: '#eee', target: 0 }
+      this.subjects.push(newSubject)
+
+      this.selectedSubject = newSubject
+      this.showSubjectModal = true
+    },
+    selectSubject (subject) {
+      this.selectedSubject = subject
+      this.showSubjectModal = true
+    },
+    deleteSubject (subject) {
+      console.log('Deleting subject!')
+      const index = this.subjects.findIndex(i => i.name === subject.name)
+      this.subjects.splice(index, 1)
+      this.showSubjectModal = false
+      this.saveConfigToLocalStorage()
+    },
     async handleConfigUpload (event) {
       const files = event.target.files
       if (!files.length) {
@@ -233,6 +292,7 @@ export default {
       }
     },
     downloadConfig () {
+      this.saveConfigToLocalStorage()
       const config = this.getConfig()
 
       const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(config, null, 2))
@@ -270,7 +330,7 @@ export default {
       this.selectedEvent = event
       this.showEventModal = true
     },
-    insertNewEvent ({ title, start, end, color }) {
+    insertNewEvent ({ title, start, end, color, occurance }) {
       const newEvent = { // add new event data
         title,
         class: this.selectedClass,
@@ -282,6 +342,10 @@ export default {
 
       if (color) {
         newEvent.color = color
+      }
+
+      if (!occurance) {
+        newEvent.occurance = 'always'
       }
 
       newEvent.id = this.events.length ? this.events[this.events.length - 1].id + 1 || 1 : 1
@@ -297,6 +361,8 @@ export default {
         }, 0)
       }
 
+      this.saveConfigToLocalStorage()
+
       return createdEvent
     },
     deleteEvent (eventId) {
@@ -309,11 +375,13 @@ export default {
 
       this.showEventModal = false
       this.showDeleteConfirmation = true
+      this.saveConfigToLocalStorage()
     },
     undoDeletion () {
       const event = this.findEventById(this.lastDeletedEventId)
       event.deleted = false
       this.showDeleteConfirmation = false
+      this.saveConfigToLocalStorage()
     },
     updateEvent (eventId, newValues) {
       console.log('Update event with new data!')
@@ -383,10 +451,6 @@ export default {
 
 <style lang='scss'>
 
-@import '~@fullcalendar/core/main.css';
-@import '~@fullcalendar/daygrid/main.css';
-@import '~@fullcalendar/timegrid/main.css';
-
 body .container {
   max-width: 1264px;
 }
@@ -402,6 +466,8 @@ body {
     margin-bottom: 0.5em;
     padding: 0.4em;
     font-size: 1em;
+    cursor: move;
+    cursor: grab;
   }
 }
 

@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="show" max-width="400px">
+  <v-dialog v-model="show" max-width="400px" persistent>
     <v-card>
       <v-card-title>
         <span class="headline">Redigera</span>
@@ -24,11 +24,19 @@
           label="Lärare"
           multiple
         ></v-autocomplete>
+        <v-select
+          label="Inträffar"
+          v-model="event.occurance"
+          :items="occuranceOptions"
+          item-value="value"
+          item-text="label"
+        >
+        </v-select>
       </v-card-text>
       <v-card-actions>
-        <v-spacer></v-spacer>
         <v-btn color="red darken-1" text @click="$emit('deleteEvent', event.id)">Radera</v-btn>
-        <v-btn color="blue darken-1" text @click="$emit('close')">Stäng</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="$emit('close')">Spara</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -41,6 +49,15 @@ export default {
   computed: {
     subjectNames () {
       return this.subjects.map(subject => subject.name)
+    }
+  },
+  data () {
+    return {
+      occuranceOptions: [
+        { label: 'Varje vecka', value: 'always' },
+        { label: 'Jämn vecka', value: 'evenWeek' },
+        { label: 'Ojämn vecka', value: 'oddWeek' }
+      ]
     }
   },
   methods: {
