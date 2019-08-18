@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar app>
+    <v-app-bar app clipped-right>
       <v-toolbar-title class="headline text-uppercase">
         <span>Skolschema</span>
         <span class="font-weight-light">online</span>
@@ -58,7 +58,7 @@
     <v-content>
       <v-container>
         <v-layout wrap>
-          <v-flex xs12 md8 lg9>
+          <v-flex xs12>
             <app-calendar
               :items="filteredEvents"
               @selectItem="showEventDetails"
@@ -66,18 +66,20 @@
               @updateItem="updateEvent"
             />
           </v-flex>
-          <v-flex xs12 md4 lg3>
-            <v-card class="ma-5 sidebar-container">
-              <v-card-title>Ämnen</v-card-title>
-              <v-card-text>
-                <div v-for="subject in subjects" :key="subject.name" class='fc-event' :style="subjectStyle(subject)"><span class="subject-name">{{ subject.name }}</span><span class="subject-remaining">{{ remainingSubjectTime[subject.name] }} min</span></div>
-                <p>Utlagd tid: {{ totalTime }} minuter</p>
-              </v-card-text>
-            </v-card>
-          </v-flex>
         </v-layout>
       </v-container>
     </v-content>
+
+    <v-navigation-drawer
+      app
+      clipped
+      v-model="sidebarOpen"
+      right
+      class="sidebar-container"
+    >
+      <div v-for="subject in subjects" :key="subject.name" class='fc-event' :style="subjectStyle(subject)"><span class="subject-name">{{ subject.name }}</span><span class="subject-remaining">{{ remainingSubjectTime[subject.name] }} min</span></div>
+      <p>Utlagd tid: {{ totalTime }} minuter</p>
+    </v-navigation-drawer>
 
     <app-event-modal
       :show="showEventModal"
@@ -126,6 +128,17 @@ function clearJSONinLocalStorage (key) {
   localStorage.removeItem(LOCALSTORAGE_PREFIX + key)
 }
 
+function readFile (file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      resolve(e.target.result)
+    }
+
+    reader.readAsText(file)
+  })
+}
+
 export default {
   name: 'app',
   components: {
@@ -134,8 +147,6 @@ export default {
   },
   data () {
     return {
-      showEventModal: false,
-      showDeleteConfirmation: false,
       events: [],
       subjects: [
         { name: 'Matte', color: 'purple', target: 180 },
@@ -148,6 +159,9 @@ export default {
       ],
       classes: ['1A', '1B', '1C', '1D'],
       teachers: ['JW', 'AS', 'PD', 'LA', 'CR'],
+      sidebarOpen: true,
+      showEventModal: false,
+      showDeleteConfirmation: false,
       lastDeletedEventId: '',
       selectedEvent: {},
       selectedClass: '1A',
@@ -161,6 +175,7 @@ export default {
       if (this.selectedTeacher !== 'Alla') {
         return events.filter(event => event.teachers.includes(this.selectedTeacher))
       }
+
       return events.filter(event => event.class === this.selectedClass)
     },
     totalTime () {
@@ -185,19 +200,18 @@ export default {
     }
   },
   methods: {
-    handleConfigUpload (event) {
+    async handleConfigUpload (event) {
       const files = event.target.files
-      if (files.length) {
-        const configFile = files[0]
-
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          const config = JSON.parse(e.target.result)
-
-          this.restoreConfig(config)
-        }
-        reader.readAsText(configFile)
+      if (!files.length) {
+        console.log('No file choosen, ignore')
+        return
       }
+
+      let config = await readFile(files[0])
+
+      config = JSON.parse(config)
+
+      this.restoreConfig(config)
     },
     restoreConfig (config) {
       config.events.forEach((event) => {
@@ -382,14 +396,12 @@ body {
 }
 
 .sidebar-container {
-  margin-top: 3px;
-  padding-left: 21px;
-  flex: 1;
+  padding: 1em;
 
   .fc-event {
     margin-bottom: 0.5em;
     padding: 0.4em;
-    font-size: 1.1em;
+    font-size: 1em;
   }
 }
 

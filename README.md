@@ -1,11 +1,14 @@
-# calendar-vue
+# Skolschema
+Enkelt schemaverktyg för lärare.
 
-## Project setup
+Byggt med Vue, Vuetify och Fullcalendar.
+
+## Installation
 ```
 npm install
 ```
 
-### Compiles and hot-reloads for development
+### Kompilering för 
 ```
 npm run serve
 ```
@@ -14,16 +17,3 @@ npm run serve
 ```
 npm run build
 ```
-
-### Run your tests
-```
-npm run test
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
