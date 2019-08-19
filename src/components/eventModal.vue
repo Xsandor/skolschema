@@ -8,6 +8,7 @@
         <v-combobox
           :items="subjectNames"
           v-model="event.title"
+          ref="titleInput"
           @change="handleEventSubjectChange"
           required
           label="Ämne"
@@ -71,6 +72,7 @@ export default {
       }
 
       this.event.color = subject.color
+      setTimeout(this.$refs.titleInput.blur, 0)
     }
   }
 }

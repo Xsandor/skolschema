@@ -31,7 +31,7 @@
           </v-btn>
         </template>
         <v-list>
-           <v-subheader>Schema</v-subheader>
+          <v-subheader>Schema</v-subheader>
           <v-list-item @click="clearEvents">
             <v-list-item-icon>
               <v-icon>mdi-delete-sweep</v-icon>
@@ -50,6 +50,20 @@
               <v-icon>mdi-cloud-download</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Spara fil</v-list-item-title>
+          </v-list-item>
+          <v-subheader>Klasser</v-subheader>
+          <v-list-item @click="showClassesModal = true">
+            <v-list-item-icon>
+              <v-icon>mdi-wrench</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Hantera</v-list-item-title>
+          </v-list-item>
+          <v-subheader>Lärare</v-subheader>
+          <v-list-item @click="showTeachersModal = true">
+            <v-list-item-icon>
+              <v-icon>mdi-wrench</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Hantera</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
@@ -107,6 +121,16 @@
       @deleteSubject="deleteSubject"
       @subjectColorChanged="handleSubjectColorChanged"
     />
+    <app-classes-modal
+      :show="showClassesModal"
+      :classes="classes"
+      @close="showClassesModal = false"
+    />
+    <app-teachers-modal
+      :show="showTeachersModal"
+      :teachers="teachers"
+      @close="showTeachersModal = false"
+    />
     <v-snackbar
       v-model="showDeleteConfirmation"
       :timeout="2000"
@@ -128,6 +152,8 @@
 import appCalendar from './components/appCalendar'
 import appEventModal from './components/eventModal'
 import appSubjectModal from './components/subjectModal'
+import appClassesModal from './components/classesModal'
+import appTeachersModal from './components/teachersModal'
 import { Draggable } from '@fullcalendar/interaction'
 
 import { calcEventTime } from './utilities'
@@ -162,7 +188,9 @@ export default {
   components: {
     appCalendar,
     appEventModal,
-    appSubjectModal
+    appSubjectModal,
+    appClassesModal,
+    appTeachersModal
   },
   data () {
     return {
@@ -181,6 +209,8 @@ export default {
       sidebarOpen: true,
       showSubjectModal: false,
       showEventModal: false,
+      showClassesModal: false,
+      showTeachersModal: false,
       showDeleteConfirmation: false,
       lastDeletedEventId: '',
       selectedSubject: {},
@@ -242,6 +272,8 @@ export default {
       const events = this.events.filter(event => event.title === subject.name)
       events.forEach((event) => {
         event.color = subject.color
+        event.textColor = subject.color === '#FFFFFF' ? '#111' : '#eee'
+        event.borderColor = subject.color === '#FFFFFF' ? '#999' : subject.color
       })
       this.saveConfigToLocalStorage()
     },
@@ -340,6 +372,9 @@ export default {
         class: this.selectedClass,
         teachers: [],
         start,
+        color,
+        textColor: color === 'rgb(255, 255, 255)' ? '#111' : '#eee',
+        borderColor: color === 'rgb(255, 255, 255)' ? '#999' : color,
         end,
         allDay: false
       }
@@ -388,6 +423,8 @@ export default {
       this.saveConfigToLocalStorage()
     },
     updateEvent (eventId, newValues) {
+      newValues.textColor = newValues.color === 'rgb(255, 255, 255)' ? '#111' : '#eee'
+      newValues.borderColor = newValues.color === 'rgb(255, 255, 255)' ? '#999' : newValues.color
       console.log('Update event with new data!')
       const event = this.findEventById(eventId)
       Object.assign(event, newValues)
@@ -397,7 +434,8 @@ export default {
     subjectStyle (subject) {
       return {
         'background-color': subject.color,
-        'border-color': subject.color
+        'border-color': subject.color === '#FFFFFF' ? '#999' : subject.color,
+        'color': subject.color === '#FFFFFF' ? '#111' : '#eee'
       }
     },
     saveConfigToLocalStorage () {
@@ -477,6 +515,38 @@ body {
 
 .subject-remaining {
   float: right;
+}
+
+@media print {
+  body, div.v-application {
+    background: #fff !important;
+  }
+
+  .v-app-bar, nav.sidebar-container, .fc-toolbar {
+    display: none;
+  }
+
+  .v-content {
+    height: 100%;
+    width: 100%;
+    padding: 0 !important;
+
+    .container, .layout {
+      height: 100%;
+    }
+
+    .app-calendar {
+      height: 500px;
+
+      .fc-time {
+        font-size: 0.8em;
+      }
+
+      .fc-title {
+        font-size: 1em;
+      }
+    }
+  }
 }
 
 </style>

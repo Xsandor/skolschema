@@ -158,9 +158,14 @@ export default {
       // console.log(event)
       el.insertAdjacentHTML('beforeend', `<div class="time-start">${formattedTime(event.start)}</div>`)
       el.insertAdjacentHTML('beforeend', `<div class="time-end">${formattedTime(event.end)}</div>`)
-      el.querySelector('.fc-content').insertAdjacentHTML('beforeend', `<div class="teachers">${event.extendedProps.teachers ? event.extendedProps.teachers.join(', ') : ''}</div>`)
+      const contentEl = el.querySelector('.fc-content')
+      // if (event.backgroundColor === '#FFFFFF') {
+      //   console.log('COLOR IT BLACK')
+      //   contentEl.style.color="#111"
+      // }
+      contentEl.insertAdjacentHTML('beforeend', `<div class="teachers">${event.extendedProps.teachers ? event.extendedProps.teachers.join(', ') : ''}</div>`)
       if (event.extendedProps.occurance !== 'always') {
-        el.querySelector('.fc-content').insertAdjacentHTML('beforeend', `<div class="occurance">${occuranceValues[event.extendedProps.occurance]}</div>`)
+        contentEl.insertAdjacentHTML('beforeend', `<div class="occurance">${occuranceValues[event.extendedProps.occurance]}</div>`)
       }
     }
   }
@@ -223,12 +228,12 @@ export default {
   }
 
   .time-start {
-    top: -1px;
-    left: -1px;
+    top: -0px;
+    left: -0px;
   }
 
   .time-end {
-    bottom: -1px;
-    right: -1px;
+    bottom: -0px;
+    right: -0px;
   }
 </style>

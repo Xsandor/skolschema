@@ -72,7 +72,8 @@ export default {
         { label: 'Lila', color: 'purple', hex: '#9C27B0' },
         { label: 'Rosa', color: 'pink', hex: '#E91E63' },
         { label: 'Blå-Grå', color: 'blue-grey', hex: '#607D8B' },
-        { label: 'Grå', color: 'grey', hex: '#9E9E9E' }
+        { label: 'Grå', color: 'grey', hex: '#9E9E9E' },
+        { label: 'Vit', color: 'white', hex: '#FFFFFF' }
       ]
     }
   },
