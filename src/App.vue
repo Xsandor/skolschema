@@ -177,7 +177,7 @@ export default {
         { name: 'Lunch', color: '#9E9E9E', target: 0 }
       ],
       classes: ['1A', '1B', '1C', '1D'],
-      teachers: ['JW', 'AS', 'PD', 'LA', 'CR'],
+      teachers: ['JW', 'MA', 'LHV', 'GM'],
       sidebarOpen: true,
       showSubjectModal: false,
       showEventModal: false,
