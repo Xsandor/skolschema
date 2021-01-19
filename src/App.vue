@@ -38,38 +38,37 @@
             </v-list-item-icon>
             <v-list-item-title>Rensa allt</v-list-item-title>
           </v-list-item>
-          <label for="config-upload" class="v-list-item v-list-item--link theme--light">
-            <v-list-item-icon>
-              <v-icon>mdi-cloud-upload</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Öppna fil</v-list-item-title>
-          </label>
-          <input id="config-upload" type="file" style="display: none" @change="handleConfigUpload"/>
           <v-list-item @click="downloadConfig">
             <v-list-item-icon>
               <v-icon>mdi-cloud-download</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Spara fil</v-list-item-title>
           </v-list-item>
-          <v-subheader>Klasser</v-subheader>
+          <label for="config-upload" class="v-list-item v-list-item--link theme--light">
+            <v-list-item-icon>
+              <v-icon>mdi-cloud-upload</v-icon>
+            </v-list-item-icon>
+          <v-list-item-title>Öppna fil</v-list-item-title>
+          <input id="config-upload" type="file" style="display: none" @change="handleConfigUpload"/>
+          </label>
+          <v-subheader>Hantera</v-subheader>
           <v-list-item @click="showClassesModal = true">
             <v-list-item-icon>
-              <v-icon>mdi-wrench</v-icon>
+              <v-icon>mdi-account-group</v-icon>
             </v-list-item-icon>
-            <v-list-item-title>Hantera</v-list-item-title>
+            <v-list-item-title>Klasser</v-list-item-title>
           </v-list-item>
-          <v-subheader>Lärare</v-subheader>
           <v-list-item @click="showTeachersModal = true">
             <v-list-item-icon>
-              <v-icon>mdi-wrench</v-icon>
+              <v-icon>mdi-teach</v-icon>
             </v-list-item-icon>
-            <v-list-item-title>Hantera</v-list-item-title>
+            <v-list-item-title>Lärare</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
     </v-app-bar>
 
-    <v-content>
+    <v-main>
       <v-container>
         <v-layout wrap>
           <v-flex xs12>
@@ -82,7 +81,7 @@
           </v-flex>
         </v-layout>
       </v-container>
-    </v-content>
+    </v-main>
 
     <v-navigation-drawer
       app
@@ -126,6 +125,7 @@
       :classes="classes"
       @close="showClassesModal = false"
       @add="addClass"
+      @delete="deleteClass"
     />
     <app-teachers-modal
       :show="showTeachersModal"
@@ -135,16 +135,19 @@
     />
     <v-snackbar
       v-model="showDeleteConfirmation"
-      :timeout="2000"
+      :timeout="20000"
     >
       Raderad
-      <v-btn
-        color="yellow"
-        text
-        @click="undoDeletion"
-      >
-        Ångra
-      </v-btn>
+      <template v-slot:action>
+        <v-btn
+          color="yellow"
+          text
+          right
+          @click="undoDeletion"
+        >
+          Ångra
+        </v-btn>
+      </template>
     </v-snackbar>
     <a id="downloadAnchorElem" style="display:none"></a>
   </v-app>
@@ -161,6 +164,8 @@ import { Draggable } from '@fullcalendar/interaction'
 import { calcEventTime } from './utilities'
 
 const LOCALSTORAGE_PREFIX = 'skolschema.'
+
+const keyEquals = (key, value) => item => item[key] === value
 
 function saveJSONinLocalStorage (key, value) {
   return localStorage.setItem(LOCALSTORAGE_PREFIX + key, JSON.stringify(value))
@@ -229,7 +234,7 @@ export default {
         return events.filter(event => event.teachers.includes(this.selectedTeacher))
       }
 
-      return events.filter(event => event.class === this.selectedClass)
+      return events.filter(keyEquals('class', this.selectedClass))
     },
     totalTime () {
       return this.filteredEvents.reduce((acc, event) => {
@@ -246,7 +251,7 @@ export default {
       const subjectTime = {}
 
       this.subjects.forEach((subject) => {
-        const events = this.filteredEvents.filter(event => event.title === subject.name)
+        const events = this.filteredEvents.filter(keyEquals('title', subject.name))
         subjectTime[subject.name] = 0 - subject.target + events.reduce((acc, event) => {
           let eventTime = calcEventTime(event)
           if (event.occurance !== 'always') {
@@ -266,8 +271,16 @@ export default {
       this.classes.push(newClass)
       this.saveConfigToLocalStorage()
     },
+    deleteClass(index) {
+      this.classes.splice(index, 1)
+      this.saveConfigToLocalStorage()
+    },
     addTeacher(newTeacher) {
       this.teachers.push(newTeacher)
+      this.saveConfigToLocalStorage()
+    },
+    deleteTeacher(index) {
+      this.teachers.splice(index, 1)
       this.saveConfigToLocalStorage()
     },
     closeEventModal () {
@@ -280,11 +293,13 @@ export default {
     },
     handleSubjectColorChanged (subject) {
       const events = this.events.filter(event => event.title === subject.name)
+
       events.forEach((event) => {
         event.color = subject.color
         event.textColor = subject.color === '#FFFFFF' ? '#111' : '#eee'
         event.borderColor = subject.color === '#FFFFFF' ? '#999' : subject.color
       })
+
       this.saveConfigToLocalStorage()
     },
     insertNewSubject () {
@@ -299,7 +314,6 @@ export default {
       this.showSubjectModal = true
     },
     deleteSubject (subject) {
-      console.log('Deleting subject!')
       const index = this.subjects.findIndex(i => i.name === subject)
 
       if (index >= 0) {
@@ -373,8 +387,6 @@ export default {
       }
     },
     showEventDetails (eventId) {
-      console.log('Show event details!')
-      console.log(eventId)
       const event = this.findEventById(eventId)
 
       this.selectedEvent = event
@@ -536,11 +548,11 @@ body {
     background: #fff !important;
   }
 
-  .v-app-bar, nav.sidebar-container, .fc-toolbar {
-    display: none;
+  .v-toolbar, .v-app-bar, nav.sidebar-container, .fc-toolbar {
+    display: none !important;
   }
 
-  .v-content {
+  .v-main {
     height: 100%;
     width: 100%;
     padding: 0 !important;
@@ -550,7 +562,7 @@ body {
     }
 
     .app-calendar {
-      height: 500px;
+      height: 100%;
 
       .fc-time {
         font-size: 0.8em;

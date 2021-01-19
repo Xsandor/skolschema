@@ -1,16 +1,11 @@
 <template>
-  <v-dialog v-model="show" max-width="400px" persistent>
+  <v-dialog v-model="show" max-width="300px" persistent>
     <v-card>
       <v-card-title>
         <span class="headline">Klasser</span>
       </v-card-title>
       <v-card-text>
-        <v-list>
-          <v-list-item v-for="c in classes" :key="c">
-            {{ c }}
-          </v-list-item>
-        </v-list>
-        <v-text-field v-model="newClass" outlined hide-details dense placeholder="Ny klass" append-outer-icon="mdi-plus" @click:append-outer="addClass" />
+        <app-crud-list :items="classes" placeholder="Ny klass" @add="addClass" @delete="deleteClass" />
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -21,18 +16,18 @@
 </template>
 
 <script>
+import appCrudList from './appCrudList'
+
 export default {
   name: 'app-classes-modal',
   props: ['show', 'classes'],
-  data() {
-    return {
-      newClass: ''
-    }
-  },
+  components: { appCrudList },
   methods: {
-    addClass() {
-      this.$emit('add', this.newClass)
-      this.newClass = ''
+    addClass(newClass) {
+      this.$emit('add', newClass)
+    },
+    deleteClass(index) {
+      this.$emit('delete', index)
     }
   }
 }

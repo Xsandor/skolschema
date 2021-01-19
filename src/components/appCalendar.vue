@@ -165,7 +165,7 @@ export default {
       // }
       contentEl.insertAdjacentHTML('beforeend', `<div class="teachers">${event.extendedProps.teachers ? event.extendedProps.teachers.join(', ') : ''}</div>`)
       if (event.extendedProps.occurance !== 'always') {
-        contentEl.insertAdjacentHTML('beforeend', `<div class="occurance">${occuranceValues[event.extendedProps.occurance]}</div>`)
+        contentEl.insertAdjacentHTML('beforeend', `<div class="occurance">${occuranceValues[event.extendedProps.occurance] || ''}</div>`)
       }
     }
   }
